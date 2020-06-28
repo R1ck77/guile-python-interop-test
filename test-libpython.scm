@@ -20,7 +20,10 @@
 (define (finalization-test repetitions)
   (do ((i 0 (1+ i)))
       ((> i repetitions))
-      (pylong-from-long (+ i 100000)))
+      (let ((value (+ i 100000)))
+       (format #t "Creating a Python integer with ~d…\n" value)
+       (pylong-from-long value)))
+  (display "Forcing garbage collection…\n")
   (gc))
 
 (conversion-test 42)
