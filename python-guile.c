@@ -1,3 +1,4 @@
+
 #define Py_LIMITED_API 0x03020000
 #include <Python.h>
 #include <libguile.h>
@@ -78,6 +79,37 @@ static SCM PyLong_AsLongLong_wrapper(SCM value)
   return scm_from_signed_integer(int_value);
 }
 
+static SCM PyFloat_FromDouble_wrapper(SCM value)
+{
+  if(!scm_real_p(value)) {
+    // TODO/FIXME extract, generalize
+    scm_error_scm (scm_from_locale_symbol ("value error"),
+                   scm_from_utf8_string ("PyFloat_FromDouble"),
+                   scm_from_utf8_string ("Invalid value provided"),
+                   SCM_UNSPECIFIED,
+                   scm_list_1 (scm_from_int (1)));
+  } else {
+    double double_value = scm_to_double(value);
+    PyObject *py_value;
+    WITH_PYTHON_LOCK(py_value = PyFloat_FromDouble(double_value));
+
+    struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyFloat");
+    pyobject_data->object = py_value;
+    
+    // TODO/FIXME Python garbage collection completely missing! I need probably some kind of thread guard
+    return scm_make_foreign_object_1(PyObject_type, pyobject_data);
+  }
+}
+
+static SCM PyFloat_AsDouble_wrapper(SCM value)
+{
+  scm_assert_foreign_object_type(PyObject_type, value);
+  struct PyObject_data *pyobject_data = scm_foreign_object_ref(value, 0);
+  double double_value;
+  WITH_PYTHON_LOCK(double_value = PyFloat_AsDouble(pyobject_data->object))
+  return scm_from_double(double_value);
+}
+
 void init_python()
 {
   pthread_mutex_init(&python_lock, NULL);
@@ -87,5 +119,7 @@ void init_python()
   scm_c_define_gsubr("py-initialize", 0, 0, 0, Py_Initialize_wrapper);
   scm_c_define_gsubr("pylong-from-long", 1, 0, 0, PyLong_FromLongLong_wrapper);
   scm_c_define_gsubr("pylong-as-long", 1, 0, 0, PyLong_AsLongLong_wrapper);
+  scm_c_define_gsubr("pyfloat-from-double", 1, 0, 0, PyFloat_FromDouble_wrapper);
+  scm_c_define_gsubr("pyfloat-as-double", 1, 0, 0, PyFloat_AsDouble_wrapper);
   scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
 }

@@ -1,8 +1,5 @@
 (use-modules (ice-9 format))
-
-;;; Load the module
-(define python-lib (dynamic-link "libpython-guile.so"))
-(dynamic-call "init_python" python-lib)
+(use-modules (python))
 
 ;;; Initialize Python
 (display "Calling Python procedures\n")
