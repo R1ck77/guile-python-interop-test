@@ -1,7 +1,26 @@
 ## Guile interoperability tests
 
-Guile seems an interesting choice for an extension/embedding language for a couple of projects I have.
+The purpose of this test is to check the capabilities of Guile as an extensible/glue language.
 
-I also remember it wasn't that difficult to actually extend the interpreter with a C library.
+In order to better understand what the language is capable of and spot critical areas, I'm going to test a basic Python C/API integration
 
-I want to see if my memory serves me well: I'll do a little test and use it to embed something, probably some bits from another simple language.
+**Disclaimer** I'm a complete n00b about Guile and Scheme in general. I know a bit of Emacs Lisp, a bit of Clojure and that's it. I hope it will do.
+
+## What's here
+
+There is a `python` module which, when loaded, provides the following functions:
+
+    py-initialize
+    pylong-from-long
+    pylong-as-long
+    pyfloat-from-double
+    pyfloat-as-double
+    py-finalize
+    
+and that's it.
+
+## Desiderata
+
+Being able to compile and run a python script, as well as having a bunch of other functions available would be nice.
+
+I'd like to explore also automatic code generation: being able to generate the Guile extension using Guile to generate the functions would be recursively nice.
