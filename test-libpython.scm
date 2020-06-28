@@ -17,7 +17,14 @@
       (if (not (= value result))
           (error (format #f "Value not converted correctly: ~d expected, got ~d!" value result))))))
 
+(define (finalization-test repetitions)
+  (do ((i 0 (1+ i)))
+      ((> i repetitions))
+      (pylong-from-long (+ i 100000)))
+  (gc))
+
 (conversion-test 42)
+(finalization-test 10)
 
 ;;; Finalize Python
 (py-finalize)

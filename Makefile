@@ -10,7 +10,7 @@ run: all
 all: libpython-guile.so
 
 libpython-guile.so: python-guile.c
-	gcc -fPIC -shared $(CFLAGS) -o $@ $< $(LDFLAGS)
+	gcc -fPIC -shared $(CFLAGS) -o $@ $< $(LDFLAGS) -lpthread
 
 
 clean:
