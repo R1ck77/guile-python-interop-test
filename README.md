@@ -15,7 +15,16 @@ There is a `python` module which, when loaded, provides the following functions:
     pylong-as-long
     pyfloat-from-double
     pyfloat-as-double
+    pydict-new
+    pydict-copy
+    py-compile-string
     py-finalize
+
+and the following constants:
+
+    py-file-input
+    py-eval-input
+    py-single-input
     
 and that's it.
 
