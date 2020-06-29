@@ -32,9 +32,14 @@
   (display "Forcing garbage collection…\n")
   (gc))
 
+(define (dict-creation-test)
+  (pydict-copy (pydict-new))
+  (display "Dictionary created (no crash detected at least…)\n"))
+
 (long-conversion-test 42)
-(finalization-test 10)
 (double-conversion-test 3.1415)
+(dict-creation-test)
+(finalization-test 10)
 
 (format #t "Compiled object: ~a\n" (py-compile-string "a=10" "<file>" py-file-input))
 

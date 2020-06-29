@@ -92,6 +92,21 @@ static SCM PyDict_New_wrapper()
   }
 }
 
+static SCM PyDict_Copy_wrapper(SCM scm_dict)
+{
+  scm_assert_foreign_object_type(PyObject_type, scm_dict);
+  struct PyObject_data *pyobject_data = scm_foreign_object_ref(scm_dict, 0);
+
+  PyObject *new_py_dict;
+  WITH_PYTHON_LOCK(new_py_dict = PyDict_Copy(pyobject_data->object));
+
+  if(new_py_dict == NULL) {
+    return raise_error("PyDict_Copy", "NULL returned");
+  } else {
+    return create_python_scm(new_py_dict, "PyDict");
+  }
+}
+
 void export_constants()
 {
   scm_c_define("py-file-input", scm_from_signed_integer(Py_file_input));
@@ -115,6 +130,7 @@ void export_functions()
   scm_c_define_gsubr("pyfloat-as-double", 1, 0, 0, PyFloat_AsDouble_wrapper);
   scm_c_define_gsubr("py-compile-string", 1, 2, 0, Py_CompileString_wrapper);
   scm_c_define_gsubr("pydict-new", 0, 0, 0, PyDict_New_wrapper);
+  scm_c_define_gsubr("pydict-copy", 1, 0, 0, PyDict_Copy_wrapper);
   scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
 }
                       
