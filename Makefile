@@ -9,9 +9,8 @@ run: all
 
 all: python-guile.so
 
-python-guile.so: python-guile.c
-	gcc -fPIC -shared $(CFLAGS) -o $@ $< $(LDFLAGS) -lpthread
-
+python-guile.so: python-guile.c python-guile-utils.c pyobject-data.c python-locking.c
+	gcc -fPIC -shared $(CFLAGS) -o $@ $^ $(LDFLAGS) -lpthread
 
 clean:
 	rm -f *.o *.so

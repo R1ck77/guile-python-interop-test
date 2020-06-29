@@ -1,41 +1,9 @@
-
 #define Py_LIMITED_API 0x03020000
-#include <Python.h>
-#include <libguile.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
-#include <pthread.h>
 #include <string.h>
-
-#define ACQUIRE_PYTHON_LOCK() pthread_mutex_lock(&python_lock)
-#define RELEASE_PYTHON_LOCK() pthread_mutex_unlock(&python_lock)
-#define WITH_PYTHON_LOCK(code)       \
-  pthread_mutex_lock(&python_lock);  \
-  {                                  \
-     code;                           \
-  }                                  \
-  pthread_mutex_unlock(&python_lock);
-
-static pthread_mutex_t python_lock;
-
-static SCM PyObject_type;
-
-struct PyObject_data {
-  PyObject *object;
-  SCM name;
-  SCM update_func;
-};
-
-static void finalize_PyObject (SCM pyobject)
-{
-  struct PyObject_data *pyobject_data = scm_foreign_object_ref(pyobject, 0);
-  ACQUIRE_PYTHON_LOCK();
-  PyObject *object = pyobject_data->object;
-  //  fprintf(stderr, "Internal finalization of object with %ld ref counts\n",  object->ob_refcnt);
-  Py_XDECREF(object);
-  RELEASE_PYTHON_LOCK();
-} 
+#include "python-guile-utils.h"
 
 static SCM Py_Initialize_wrapper(SCM unused)
 {
@@ -47,14 +15,6 @@ static SCM Py_Finalize_wrapper(SCM unused)
 {
   WITH_PYTHON_LOCK(Py_Finalize())
   return SCM_UNSPECIFIED;
-}
-
-static SCM raise_error(const char *subroutine, const char *message) {
-  return scm_error_scm (scm_from_locale_symbol("misc-error"),
-                        scm_from_utf8_string(subroutine),
-                        scm_from_utf8_string(message),
-                        scm_list_1(scm_from_int(1)),
-                        SCM_BOOL_F);
 }
 
 static SCM PyLong_FromLongLong_wrapper(SCM value)
@@ -82,13 +42,6 @@ static SCM PyLong_AsLongLong_wrapper(SCM value)
   return scm_from_signed_integer(int_value);
 }
 
-static SCM create_python_scm(PyObject *py_object, const char *object_name)
-{
-  struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), object_name);
-  pyobject_data->object = py_object;
-  return scm_make_foreign_object_1(PyObject_type, pyobject_data);  
-}
-
 static SCM PyFloat_FromDouble_wrapper(SCM value)
 {
   if(!scm_real_p(value)) {
@@ -113,8 +66,8 @@ static SCM PyFloat_AsDouble_wrapper(SCM value)
 
 static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
 {
-  int start = scm_is_eq(scm_start, SCM_UNDEFINED) ? Py_file_input : scm_to_signed_integer(scm_start, LONG_MIN, LONG_MAX);
-  char *file = scm_is_eq(scm_file, SCM_UNDEFINED) ? strdup("<file>") : scm_to_utf8_stringn(scm_file, NULL);
+  int start = get_optional_int(scm_start, Py_file_input);
+  char *file = get_optional_allocated_string(scm_file, "<file>");
   char *script = scm_to_utf8_stringn(scm_script, NULL);
 
   PyObject *py_object;
@@ -125,6 +78,18 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   } else {
     return create_python_scm(py_object, "PyCompiledCode");
   } 
+}
+
+static SCM PyDict_New_wrapper()
+{
+  PyObject *py_dict;
+  WITH_PYTHON_LOCK(py_dict = PyDict_New());
+
+  if(py_dict == NULL) {
+    return raise_error("PyDict_New", "NULL returned");
+  } else {
+    return create_python_scm(py_dict, "PyDict");
+  }
 }
 
 void export_constants()
@@ -149,14 +114,14 @@ void export_functions()
   scm_c_define_gsubr("pyfloat-from-double", 1, 0, 0, PyFloat_FromDouble_wrapper);
   scm_c_define_gsubr("pyfloat-as-double", 1, 0, 0, PyFloat_AsDouble_wrapper);
   scm_c_define_gsubr("py-compile-string", 1, 2, 0, Py_CompileString_wrapper);
+  scm_c_define_gsubr("pydict-new", 0, 0, 0, PyDict_New_wrapper);
   scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
 }
                       
 
 void init_python()
 {
-  pthread_mutex_init(&python_lock, NULL);
-
+  init_global_lock();
   export_types();
   export_constants();
   export_functions();
