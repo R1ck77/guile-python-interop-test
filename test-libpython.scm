@@ -5,24 +5,24 @@
 (display "Calling Python procedures\n")
 (py-initialize)
 
-(define (conversion-test value)
-  (format #t "About to convert ~d to Python…\n" value)  
-  (let ((py-long (pylong-from-long value)))
-    (format #t "Value converted to ~a! Getting the result back…\n" py-long)
-    (let ((result (pylong-as-long py-long)))
-      (format #t "Got ~d back\n" result)
-      (if (not (= value result))
-          (error (format #f "Value not converted correctly: ~d expected, got ~d!" value result))))))
-
 ;;; TODO/FIXME duplication
-(define (double-conversion-test value)
-  (format #t "About to convert ~f to Python…\n" value)  
-  (let ((py-float (pyfloat-from-double value)))
-    (format #t "Value converted to ~a! Getting the result back…\n" py-float)
-    (let ((result (pyfloat-as-double py-float)))
-      (format #t "Got ~f back\n" result)
+(define (conversion-test value format-specifier to-function from-function)
+  (format #t (string-append "About to convert ~" format-specifier " to Python…\n") value)  
+  (let ((py-value (to-function value)))
+    (format #t "Value converted to ~a! Getting the result back…\n" py-value)
+    (let ((result (from-function py-value)))
+      (format #t (string-append "Got ~" format-specifier " back\n") result)
       (if (not (= value result))
-          (error (format #f "Value not converted correctly: ~f expected, got ~f!" value result))))))
+          (error (format #f (string-append "Value not converted correctly: ~" format-specifier
+                                           " expected, got ~" format-specifier
+                                           "!")
+                         value result))))))
+
+(define (long-conversion-test value)
+  (conversion-test value "d" pylong-from-long pylong-as-long))
+
+(define (double-conversion-test value)
+  (conversion-test value "f" pyfloat-from-double pyfloat-as-double))
 
 (define (finalization-test repetitions)
   (do ((i 0 (1+ i)))
@@ -33,9 +33,11 @@
   (display "Forcing garbage collection…\n")
   (gc))
 
-(conversion-test 42)
+(long-conversion-test 42)
 (finalization-test 10)
 (double-conversion-test 3.1415)
+
+(format #t "Compiled object: ~a\n" (py-compile-string "a=10" "<file>" py-file-input))
 
 ;;; Finalize Python
 (py-finalize)

@@ -4,7 +4,11 @@
             pylong-as-long
             pyfloat-from-double
             pyfloat-as-double
-            py-finalize))
+            py-compile-string
+            py-finalize
+            py-file-input
+            py-eval-input
+            py-single-input))
             
 (load-extension "python-guile" "init_python")
 

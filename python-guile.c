@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <pthread.h>
+#include <string.h>
 
 #define ACQUIRE_PYTHON_LOCK() pthread_mutex_lock(&python_lock)
 #define RELEASE_PYTHON_LOCK() pthread_mutex_unlock(&python_lock)
@@ -48,15 +49,18 @@ static SCM Py_Finalize_wrapper(SCM unused)
   return SCM_UNSPECIFIED;
 }
 
+static SCM raise_error(const char *subroutine, const char *message) {
+  return scm_error_scm (scm_from_locale_symbol("misc-error"),
+                        scm_from_utf8_string(subroutine),
+                        scm_from_utf8_string(message),
+                        scm_list_1(scm_from_int(1)),
+                        SCM_BOOL_F);
+}
+
 static SCM PyLong_FromLongLong_wrapper(SCM value)
 {
   if(!scm_integer_p(value)) {
-    // TODO/FIXME extract, generalize
-    scm_error_scm (scm_from_locale_symbol ("value error"),
-                   scm_from_utf8_string ("PyLong_FromLongLong"),
-                   scm_from_utf8_string ("Invalid value provided"),
-                   SCM_UNSPECIFIED,
-                   scm_list_1 (scm_from_int (1)));
+    return raise_error("PyLong_FromLongLong", "Invalid value provided");
   } else {
     long long int_value = scm_to_signed_integer(value, LONG_MIN, LONG_MAX);
     PyObject *py_value;
@@ -79,25 +83,23 @@ static SCM PyLong_AsLongLong_wrapper(SCM value)
   return scm_from_signed_integer(int_value);
 }
 
+static SCM create_python_scm(PyObject *py_object, const char *object_name)
+{
+  struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), object_name);
+  pyobject_data->object = py_object;
+  return scm_make_foreign_object_1(PyObject_type, pyobject_data);  
+}
+
 static SCM PyFloat_FromDouble_wrapper(SCM value)
 {
   if(!scm_real_p(value)) {
-    // TODO/FIXME extract, generalize
-    scm_error_scm (scm_from_locale_symbol ("value error"),
-                   scm_from_utf8_string ("PyFloat_FromDouble"),
-                   scm_from_utf8_string ("Invalid value provided"),
-                   SCM_UNSPECIFIED,
-                   scm_list_1 (scm_from_int (1)));
+    return raise_error("PyFloat_FromDouble", "Invalid value provided");
   } else {
     double double_value = scm_to_double(value);
     PyObject *py_value;
     WITH_PYTHON_LOCK(py_value = PyFloat_FromDouble(double_value));
 
-    struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyFloat");
-    pyobject_data->object = py_value;
-    
-    // TODO/FIXME Python garbage collection completely missing! I need probably some kind of thread guard
-    return scm_make_foreign_object_1(PyObject_type, pyobject_data);
+    return create_python_scm(py_value, "PyFloat");
   }
 }
 
@@ -110,16 +112,54 @@ static SCM PyFloat_AsDouble_wrapper(SCM value)
   return scm_from_double(double_value);
 }
 
-void init_python()
+static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
 {
-  pthread_mutex_init(&python_lock, NULL);
+  int start = scm_is_eq(scm_start, SCM_UNDEFINED) ? Py_file_input : scm_to_signed_integer(scm_start, LONG_MIN, LONG_MAX);
+  char *file = scm_is_eq(scm_file, SCM_UNDEFINED) ? strdup("<file>") : scm_to_utf8_stringn(scm_file, NULL);
+  char *script = scm_to_utf8_stringn(scm_script, NULL);
+
+  // TODO/FIXME error condition!
+  PyObject *py_object;
+  WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
+
+  if(py_object == NULL) {
+    return raise_error("Py_CompileString", "NULL returned");
+  } else {
+    return create_python_scm(py_object, "PyCompiledCode");
+  } 
+}
+
+void export_constants()
+{
+  scm_c_define("py-file-input", scm_from_signed_integer(Py_file_input));
+  scm_c_define("py-eval-input", scm_from_signed_integer(Py_eval_input));
+  scm_c_define("py-single-input", scm_from_signed_integer(Py_single_input));
+}
+
+void export_types()
+{
   PyObject_type = scm_make_foreign_object_type(scm_from_utf8_symbol("PyObject"),
                                                scm_list_1(scm_from_utf8_symbol("pointer")),
                                                finalize_PyObject);
+}
+
+void export_functions()
+{
   scm_c_define_gsubr("py-initialize", 0, 0, 0, Py_Initialize_wrapper);
   scm_c_define_gsubr("pylong-from-long", 1, 0, 0, PyLong_FromLongLong_wrapper);
   scm_c_define_gsubr("pylong-as-long", 1, 0, 0, PyLong_AsLongLong_wrapper);
   scm_c_define_gsubr("pyfloat-from-double", 1, 0, 0, PyFloat_FromDouble_wrapper);
   scm_c_define_gsubr("pyfloat-as-double", 1, 0, 0, PyFloat_AsDouble_wrapper);
+  scm_c_define_gsubr("py-compile-string", 1, 2, 0, Py_CompileString_wrapper);
   scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
+}
+                      
+
+void init_python()
+{
+  pthread_mutex_init(&python_lock, NULL);
+
+  export_types();
+  export_constants();
+  export_functions();
 }
