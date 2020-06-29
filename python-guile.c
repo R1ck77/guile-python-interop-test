@@ -69,7 +69,6 @@ static SCM PyLong_FromLongLong_wrapper(SCM value)
     struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyLong");
     pyobject_data->object = py_value;
     
-    // TODO/FIXME Python garbage collection completely missing! I need probably some kind of thread guard
     return scm_make_foreign_object_1(PyObject_type, pyobject_data);
   }
 }
@@ -118,7 +117,6 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   char *file = scm_is_eq(scm_file, SCM_UNDEFINED) ? strdup("<file>") : scm_to_utf8_stringn(scm_file, NULL);
   char *script = scm_to_utf8_stringn(scm_script, NULL);
 
-  // TODO/FIXME error condition!
   PyObject *py_object;
   WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
 

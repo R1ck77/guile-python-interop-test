@@ -5,7 +5,6 @@
 (display "Calling Python procedures\n")
 (py-initialize)
 
-;;; TODO/FIXME duplication
 (define (conversion-test value format-specifier to-function from-function)
   (format #t (string-append "About to convert ~" format-specifier " to Python…\n") value)  
   (let ((py-value (to-function value)))
