@@ -36,12 +36,20 @@
   (pydict-copy (pydict-new))
   (display "Dictionary created (no crash detected at least…)\n"))
 
+(define (execution-test)
+  (let ((compiled-code (py-compile-string "import sys\nsys.stdout.write(\"HELLO WORLD (FROM PYTHON)!\\n\")" "<file>" py-file-input))
+        (builtins (pyeval-get-builtins))
+        (globals (pydict-new)))    
+    (pydict-set-item-string globals "__builtins__" builtins)
+    (let ((result (pyeval-eval-code compiled-code globals globals)))
+      (format #t "Got a result: ~a…\n" result)
+      )))
+
 (long-conversion-test 42)
 (double-conversion-test 3.1415)
 (dict-creation-test)
+(execution-test)
 (finalization-test 10)
-
-(format #t "Compiled object: ~a\n" (py-compile-string "a=10" "<file>" py-file-input))
 
 ;;; Finalize Python
 (py-finalize)
