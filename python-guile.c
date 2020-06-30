@@ -73,8 +73,8 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   PyObject *py_object;
   WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
 
-  if(py_object == NULL) { //TODO/FIXME wrong pattern! Return the NULL someway, so than an exception can be extracted
-    return raise_error("Py_CompileString", "NULL returned");
+  if(py_object == NULL) {
+    return create_empty_list();
   } else {
     return create_python_scm(py_object, "PyCompiledCode");
   } 
@@ -86,7 +86,7 @@ static SCM PyDict_New_wrapper()
   WITH_PYTHON_LOCK(py_dict = PyDict_New());
 
   if(py_dict == NULL) {
-    return raise_error("PyDict_New", "NULL returned");
+    return create_empty_list();
   } else {
     return create_python_scm(py_dict, "PyDict");
   }
@@ -101,7 +101,7 @@ static SCM PyDict_Copy_wrapper(SCM scm_dict)
   WITH_PYTHON_LOCK(new_py_dict = PyDict_Copy(pyobject_data->object));
 
   if(new_py_dict == NULL) {
-    return raise_error("PyDict_Copy", "NULL returned");
+    return create_empty_list();
   } else {
     return create_python_scm(new_py_dict, "PyDict");
   }

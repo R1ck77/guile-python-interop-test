@@ -35,5 +35,8 @@ char *get_optional_allocated_string(SCM optional_string, char *default_string)
   return scm_is_eq(optional_string, SCM_UNDEFINED) ? strdup(default_string) : scm_to_utf8_stringn(optional_string, NULL);
 }
 
-
-
+// TODO/FIXME this seems oddly convoluted
+SCM create_empty_list()
+{
+  return scm_list_n(SCM_UNDEFINED);
+}
