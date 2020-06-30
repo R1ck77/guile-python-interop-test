@@ -9,7 +9,7 @@ In order to better understand what the language is capable of and spot critical 
 ## What's here
 
 There is a `python` module which, when loaded, provides the following functions:
-
+    
     py-initialize
     pylong-from-long
     pylong-as-long
@@ -17,7 +17,10 @@ There is a `python` module which, when loaded, provides the following functions:
     pyfloat-as-double
     pydict-new
     pydict-copy
+    pydict-set-item-string
     py-compile-string
+    pyeval-eval-code
+    pyeval-get-builtins
     py-finalize
 
 and the following constants:
@@ -30,6 +33,13 @@ and that's it.
 
 ## Desiderata
 
-Being able to compile and run a python script, as well as having a bunch of other functions available would be nice.
+Having more API functions available would be nice.
 
 I'd like to explore also automatic code generation: being able to generate the Guile extension using Guile to generate the functions would be recursively nice.
+
+## Bugs
+
+Many, but those are the ones I know:
+
+- I have yet to figure out if/how to deallocate C strings obtained from SCM values
+- functions are an arbitrary mix of literal translation (values, etc) and misguided high-level meddling (errors are thrown if NULL is returned)
