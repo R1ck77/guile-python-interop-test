@@ -68,10 +68,12 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
 {
   int start = get_optional_int(scm_start, Py_file_input);
   char *file = get_optional_allocated_string(scm_file, "<file>");
-  char *script = scm_to_utf8_stringn(scm_script, NULL); // TODO/FIXME memory leak galore, everywhere
+  char *script = scm_to_utf8_stringn(scm_script, NULL);
 
   PyObject *py_object;
   WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
+
+  free(script);
 
   if(py_object == NULL) {
     return create_empty_list();
@@ -145,6 +147,8 @@ static SCM PyDict_SetItemString_wrapper(SCM dict, SCM key, SCM value)
 
   int result;
   WITH_PYTHON_LOCK(result = PyDict_SetItemString(pydict_data->object, c_key, pyvalue_data->object));
+
+  free(c_key);
 
   return scm_from_signed_integer(result);
 }
