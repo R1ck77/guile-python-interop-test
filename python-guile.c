@@ -5,17 +5,8 @@
 #include <string.h>
 #include "python-guile-utils.h"
 
-static SCM Py_Initialize_wrapper(SCM unused)
-{
-  WITH_PYTHON_LOCK(Py_Initialize());
-  return SCM_UNSPECIFIED;
-}
+#include "automatically-generated.c"
 
-static SCM Py_Finalize_wrapper(SCM unused)
-{
-  WITH_PYTHON_LOCK(Py_Finalize())
-  return SCM_UNSPECIFIED;
-}
 
 static SCM PyLong_FromLongLong_wrapper(SCM value)
 {
