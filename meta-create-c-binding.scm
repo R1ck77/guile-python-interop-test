@@ -106,7 +106,7 @@
   (let ((return-value (car specification))
         (name (list-ref specification 1))
         (args (list-ref specification 2)))
-    `((:comment ,(format "// ~a\n" name))
+    `((:comment ,(format #f "// ~a\n" name))
       (:header ,return-value ,(format #f "~a_wrapper" name))
       (:group ,(if (eq? return-value 'void)
                    `((:sub-execute ,name)
