@@ -119,14 +119,20 @@
   (eval-string
    (string-append "'(" raw-specification ")")))
 
-;;; TODO/FIXME refactor from here on. It's hideous
-(write-lines header)
+;;;TODO/FIXME this one only uses the first function and ignores the other!
+(define-macro (broken-> value . functions)
+  (let ((input (make-symbol "result")))
+    `(let ((,input ,value))
+       (,(car functions) ,input))))
 
-(map write-lines
- (map generate-function-lines
-      (map (lambda (x)
-             (format #f "CURRENT: ~a\n" x)
-             x)
-       (map create-pseudocode
-            (map translate-specification
-                 (read-specifications functions-file))))))
+(define (write-wrappers path-to-templates)
+  (map write-lines
+       (map generate-function-lines
+            (map create-pseudocode
+                 (map translate-specification
+                      (read-specifications path-to-templates))))))
+
+(write-lines header)
+(write-wrappers functions-file)
+
+
