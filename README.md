@@ -4,7 +4,7 @@ The purpose of this test is to check the capabilities of Guile as an extensible/
 
 In order to better understand what the language is capable of and spot critical areas, I'm going to test a basic Python C/API integration
 
-**Disclaimer** I'm a complete n00b about Guile and Scheme in general. I know a bit of Emacs Lisp, a bit of Clojure and that's it. I hope it will do.
+**Disclaimer** I'm a complete n00b about Guile and Scheme in general. I know a bit of Emacs Lisp, a bit of Clojure and that's it. I hope it will do, but if you see strange stuff in the code, don't be surprised.
 
 ## What's here
 
@@ -35,11 +35,11 @@ and that's it.
 
 Having more API functions available would be nice.
 
-I'd like to explore also automatic code generation: being able to generate the Guile extension using Guile to generate the functions would be recursively nice.
+I'm also exploring automatic code generation: being able to generate the Guile extension using Guile to create the functions would be recursively nice, and I'm slowly expanding this functionality to allow the porting of a generic N-arity Python function.
 
 ## Bugs
 
-Many, but those are the ones I know:
+Many, here is a semi-updated list of the ones I know:
 
-- I have yet to figure out if/how to deallocate C strings obtained from SCM values
-- functions are an arbitrary mix of literal translation (values, etc) and misguided high-level meddling (errors are thrown if NULL is returned)
+- automatic code generation supports a very limited combination of arguments/return values
+- some code is missing, specifically no `scm_c_define_gsubr` is created yet, and the `python.scm` module is not updated with the generated symbols yet
