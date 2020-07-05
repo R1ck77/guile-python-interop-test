@@ -7,23 +7,6 @@
 
 #include "automatically-generated.c"
 
-
-static SCM PyLong_FromLongLong_wrapper(SCM value)
-{
-  if(!scm_integer_p(value)) {
-    return raise_error("PyLong_FromLongLong", "Invalid value provided");
-  } else {
-    long long int_value = scm_to_signed_integer(value, LONG_MIN, LONG_MAX);
-    PyObject *py_value;
-    WITH_PYTHON_LOCK(py_value = PyLong_FromLongLong(int_value));
-
-    struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyLong");
-    pyobject_data->object = py_value;
-    
-    return scm_make_foreign_object_1(PyObject_type, pyobject_data);
-  }
-}
-
 static SCM PyLong_AsLongLong_wrapper(SCM value)
 {
   scm_assert_foreign_object_type(PyObject_type, value);

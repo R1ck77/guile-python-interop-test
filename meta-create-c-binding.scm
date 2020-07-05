@@ -31,6 +31,25 @@
 
 (define generate-function-lines)
 
+(define (call-argument-from-index index)
+  (format #f "call_arg_~d" index))
+
+(define (expand-check-value arguments)
+  (let ((error-location (car arguments))
+        (variable-name (cadr arguments))
+        (type (list-ref arguments 2))) ; TODO/FIXME type unused (yet)
+    (list
+     (format #f "if(!scm_integer_p(~a)) {\n" variable-name)
+     (format #f "\treturn raise_error(~s, \"Invalid value provided\");\n" error-location)
+     (format #f "}\n"))))
+
+(define (expand-convert-from-scheme arguments)
+  (let ((input-name (car arguments))
+        (result-name (cadr arguments))
+        (type (list-ref arguments 2)))  ; TODO/FIXME type unused (yet)
+    (list
+     (format #f "long ~a = scm_to_signed_integer(~a, LONG_MIN, LONG_MAX);\n\n" result-name input-name))))
+
 (define (expand-return arguments)
   (list
    (format #f "return ~a;\n" (car arguments))))
@@ -51,25 +70,43 @@
      (format #f "\t~a = create_empty_list();\n" result-name)
      "} else {\n"
      (format #f "\t~a = create_python_scm(~a, \"PyObject\");\n" result-name input-name)
-     "}\n")))
+     "}\n\n")))
+
+(define (create-call-arguments-list arg-names)
+  (string-join (map (lambda (name)
+                        (format #f "~a" name))
+                    arg-names)
+               ","))
 
 (define (expand-function-execute arguments)
   (let ((return-type (car arguments))
         (function-name (cadr arguments))
-        (return-variable (list-ref arguments 2)))
+        (arguments-names (list-ref arguments 2))
+        (return-variable (list-ref arguments 3)))
     (list
      (format #f "~a ~a;\n" return-type return-variable)
-     (format #f "WITH_PYTHON_LOCK(~a = ~a());\n\n" return-variable function-name))))
+     (format #f "WITH_PYTHON_LOCK(~a = ~a(~a));\n\n" return-variable function-name (create-call-arguments-list arguments-names)))))
 
 (define (expand-sub-execute arguments)
-  (let ((function-name (car arguments)))
+  (let ((function-name (car arguments))
+        (arguments-names (cadr arguments)))
     (list
-     (format #f "WITH_PYTHON_LOCK(~a());\n" function-name))))
+     (format #f "WITH_PYTHON_LOCK(~a(~a));\n" function-name (create-call-arguments-list arguments-names)))))
+
+(define (function-argument-from-index index)
+  (format #f "scm_arg_~d" index))
+
+(define (create-function-arguments-list n-arguments)
+  (string-join (map (lambda (index)
+                      (format #f "SCM ~a" (function-argument-from-index index)))
+                    (iota n-arguments))
+               ","))
 
 (define (expand-header arguments)
-  (let ((wrapper-name (cadr arguments)))
+  (let ((wrapper-name (cadr arguments))
+        (n-arguments (list-ref arguments 2)))
    (list
-    (format #f "SCM ~a()\n" wrapper-name))))
+    (format #f "SCM ~a(~a)\n" wrapper-name (create-function-arguments-list n-arguments)))))
 
 (define (expand-comment arguments)
   arguments)
@@ -89,7 +126,11 @@
    ((eqv? type ':return)
     expand-return)
    ((eqv? type ':group)
-    expand-group)))
+    expand-group)
+   ((eqv? type ':check-value)
+    expand-check-value )
+   ((eqv? type ':convert-from-scheme)
+    expand-convert-from-scheme)))
 
 (define (expand-pseudo-instruction pseudocode)
   (let ((type (car pseudocode))
@@ -102,18 +143,47 @@
         '()
         pseudocodes))
 
+;;; static SCM PyLong_FromLongLong_wrapper(SCM value)
+;;; {
+;;;   if(!scm_integer_p(value)) {
+;;;     return raise_error("PyLong_FromLongLong", "Invalid value provided");
+;;;   } else {
+;;;     long long int_value = scm_to_signed_integer(value, LONG_MIN, LONG_MAX);
+;;;     PyObject *py_value;
+;;;     WITH_PYTHON_LOCK(py_value = PyLong_FromLongLong(int_value));
+;;; 
+;;;     struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyLong");
+;;;     pyobject_data->object = py_value;
+;;;     
+;;;     return scm_make_foreign_object_1(PyObject_type, pyobject_data);
+;;;   }
+;;; }
+;;;
+
+;;; TODO/FIXME generalize for N arguments!
+(define (create-arguments-pseudocode-blocks function-name arguments)
+  (if (nil? arguments)
+      '()
+      `((:check-value ,(format #f "Argument ~d for ~a" 0 function-name) ,(function-argument-from-index 0) long)
+        (:convert-from-scheme scm_arg_0 call_arg_0 long))))
+
 (define (create-pseudocode specification)
   (let ((return-value (car specification))
         (name (list-ref specification 1))
         (args (list-ref specification 2)))
-    `((:comment ,(format #f "// ~a\n" name))
-      (:header ,return-value ,(format #f "~a_wrapper" name))
-      (:group ,(if (eq? return-value 'void)
-                   `((:sub-execute ,name)
-                     (:return SCM_UNSPECIFIED))
-                   `((:function-execute ,return-value ,name result)
-                     (:to-py-object result scm_result)
-                     (:return scm_result)))))))
+    (let* ((args-range (iota (length args)))
+           (function-arguments (map function-argument-from-index args-range))
+           (call-arguments (map call-argument-from-index args-range))) 
+      `((:comment ,(format #f "// ~a\n" name))
+        (:header ,return-value ,(format #f "~a_wrapper" name) ,(length args))
+        (:group
+         (,@(create-arguments-pseudocode-blocks name args)
+          ,@(if (eq? return-value 'void)
+                `((:sub-execute ,name ,call-arguments)
+                  (:return SCM_UNSPECIFIED))
+                `((:function-execute ,return-value ,name ,call-arguments result) ;;; ADDED AN ARGUMENT
+                  (:to-py-object result scm_result)
+                  (:return scm_result)))))))))
 
 (define (translate-specification raw-specification)
   (eval-string
