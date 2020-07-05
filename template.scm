@@ -1,2 +1,3 @@
-Py_Initialize
-Py_Finalize
+void Py_Initialize ()
+void Py_Finalize ()
+PyObject* PyDict_New ()

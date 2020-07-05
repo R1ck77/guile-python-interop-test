@@ -73,18 +73,6 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   } 
 }
 
-static SCM PyDict_New_wrapper()
-{
-  PyObject *py_dict;
-  WITH_PYTHON_LOCK(py_dict = PyDict_New());
-
-  if(py_dict == NULL) {
-    return create_empty_list();
-  } else {
-    return create_python_scm(py_dict, "PyDict");
-  }
-}
-
 static SCM PyDict_Copy_wrapper(SCM scm_dict)
 {
   scm_assert_foreign_object_type(PyObject_type, scm_dict);
