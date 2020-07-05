@@ -17,26 +17,6 @@
     (close-port port)
     (reverse results)))
 
-;;;  This is what I would expect the generator to do, but without the string concatenation:
-;;;
-;;;  static SCM Py_Initialize_wrapper(SCM unused)
-;;;  {
-;;;    WITH_PYTHON_LOCK(Py_Initialize());
-;;;    return SCM_UNSPECIFIED;
-;;;  }
-;;;
-;;;  static SCM PyDict_New_wrapper()
-;;;  {
-;;;    PyObject *result;
-;;;    WITH_PYTHON_LOCK(py_dict = PyDict_New());
-;;;  
-;;;    if(result == NULL) {
-;;;      return create_empty_list();
-;;;    } else {
-;;;      return create_python_scm(result, "PyObject");
-;;;    }
-;;;  }
-
 (define header
   (list
    "/*\n"
@@ -51,46 +31,70 @@
 
 (define generate-function-lines)
 
-;;; TODO/FIXME list-refs should be assigned in the blocks, or better each block should be a function
+(define (expand-return arguments)
+  (list
+   (format #f "return ~a;\n" (car arguments))))
+
+(define (expand-group arguments)
+  (let ((group-pseudocodes (car arguments)))
+    (append '("{\n")
+            (map (lambda (string) (string-append "\t" string))
+                 (generate-function-lines group-pseudocodes))
+            '("}\n\n"))))
+
+(define (expand-to-py-object-conversion arguments)
+  (let ((input-name (car arguments))
+        (result-name (cadr arguments)))
+    (list
+     (format #f "SCM ~a;\n" result-name)
+     (format #f "if(~a == NULL) {\n" input-name)
+     (format #f "\t~a = create_empty_list();\n" result-name)
+     "} else {\n"
+     (format #f "\t~a = create_python_scm(~a, \"PyObject\");\n" result-name input-name)
+     "}\n")))
+
+(define (expand-function-execute arguments)
+  (let ((return-type (car arguments))
+        (function-name (cadr arguments))
+        (return-variable (list-ref arguments 2)))
+    (list
+     (format #f "~a ~a;\n" return-type return-variable)
+     (format #f "WITH_PYTHON_LOCK(~a = ~a());\n\n" return-variable function-name))))
+
+(define (expand-sub-execute arguments)
+  (let ((function-name (car arguments)))
+    (list
+     (format #f "WITH_PYTHON_LOCK(~a());\n" function-name))))
+
+(define (expand-header arguments)
+  (let ((wrapper-name (cadr arguments)))
+   (list
+    (format #f "SCM ~a()\n" wrapper-name))))
+
+(define (expand-comment arguments)
+  arguments)
+
+(define (get-expansion-function type)
+  (cond
+   ((eqv? type ':comment)
+    expand-comment)
+   ((eqv? type ':header)
+    expand-header)
+   ((eqv? type ':sub-execute)
+    expand-sub-execute)
+   ((eqv? type ':function-execute)
+    expand-function-execute)
+   ((eqv? type ':to-py-object)
+    expand-to-py-object-conversion)
+   ((eqv? type ':return)
+    expand-return)
+   ((eqv? type ':group)
+    expand-group)))
+
 (define (expand-pseudo-instruction pseudocode)
   (let ((type (car pseudocode))
         (arguments (cdr pseudocode)))
-    (let ((result (cond
-            ((eqv? type ':comment)
-             (list (car arguments)))
-            ((eqv? type ':header)
-             (list (format #f "SCM ~a()\n" (list-ref arguments 1))))
-            ((eqv? type ':sub-execute)
-             (list (format #f "WITH_PYTHON_LOCK(~a());\n" (car arguments))))
-            ((eqv? type ':function-execute)
-             (list
-              (format #f "~a ~a;\n"
-                      (car arguments)
-                      (list-ref arguments 2))
-              (format #f "WITH_PYTHON_LOCK(~a = ~a());\n\n"
-                      (list-ref arguments 2)
-                      (cadr arguments))))
-            ((eqv? type ':to-py-object)
-             (list
-              (format #f "SCM ~a;\n"
-                      (cadr arguments))
-              (format #f "if(~a == NULL) {\n"
-                      (car arguments))
-              (format #f "    ~a = create_empty_list();\n"
-                      (cadr arguments))
-              "} else {\n"
-              (format #f "    ~a = create_python_scm(~a, \"PyObject\");\n"
-                      (cadr arguments)
-                      (car arguments))
-              "}\n"              
-              ))
-            ((eqv? type ':return)
-             (list (format #f "return ~a;\n" (car arguments))))
-            ((eqv? type ':group)
-             (append '("{\n") ;;; TODO/FIXME  it's easy to add a tab: do it!
-                     (generate-function-lines (car arguments))
-                     '("}\n\n"))))))
-      result)))
+    (apply (get-expansion-function type) (list arguments))))
 
 (define (generate-function-lines pseudocodes)
   (fold (lambda (pseudo-instruction previous)
@@ -102,7 +106,7 @@
   (let ((return-value (car specification))
         (name (list-ref specification 1))
         (args (list-ref specification 2)))
-    `((:comment ,(format "// ~a\n" name)) ; TODO/FIXME even the comment could be better
+    `((:comment ,(format "// ~a\n" name))
       (:header ,return-value ,(format #f "~a_wrapper" name))
       (:group ,(if (eq? return-value 'void)
                    `((:sub-execute ,name)
