@@ -16,19 +16,6 @@ static SCM PyLong_AsLongLong_wrapper(SCM value)
   return scm_from_signed_integer(int_value);
 }
 
-static SCM PyFloat_FromDouble_wrapper(SCM value)
-{
-  if(!scm_real_p(value)) {
-    return raise_error("PyFloat_FromDouble", "Invalid value provided");
-  } else {
-    double double_value = scm_to_double(value);
-    PyObject *py_value;
-    WITH_PYTHON_LOCK(py_value = PyFloat_FromDouble(double_value));
-
-    return create_python_scm(py_value, "PyFloat");
-  }
-}
-
 static SCM PyFloat_AsDouble_wrapper(SCM value)
 {
   scm_assert_foreign_object_type(PyObject_type, value);

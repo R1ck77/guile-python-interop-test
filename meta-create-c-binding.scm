@@ -34,21 +34,31 @@
 (define (call-argument-from-index index)
   (format #f "call_arg_~d" index))
 
+(define (get-check-function-for-type type)
+  (case type
+    ((long) "scm_integer_p")
+    ((double) "scm_real_p")))
+
 (define (expand-check-value arguments)
   (let ((error-location (car arguments))
         (variable-name (cadr arguments))
-        (type (list-ref arguments 2))) ; TODO/FIXME type unused (yet)
+        (type (list-ref arguments 2)))
     (list
-     (format #f "if(!scm_integer_p(~a)) {\n" variable-name)
+     (format #f "if(!~a(~a)) {\n" (get-check-function-for-type type) variable-name)
      (format #f "\treturn raise_error(~s, \"Invalid value provided\");\n" error-location)
      (format #f "}\n"))))
+
+(define (get-convert-function-for-type type)
+  (case type
+    ((long) "convert_to_long")
+    ((double) "scm_to_double")))
 
 (define (expand-convert-from-scheme arguments)
   (let ((input-name (car arguments))
         (result-name (cadr arguments))
-        (type (list-ref arguments 2)))  ; TODO/FIXME type unused (yet)
+        (type (list-ref arguments 2)))
     (list
-     (format #f "long ~a = scm_to_signed_integer(~a, LONG_MIN, LONG_MAX);\n\n" result-name input-name))))
+     (format #f "~a ~a = ~a(~a);\n\n" type result-name (get-convert-function-for-type type) input-name))))
 
 (define (expand-return arguments)
   (list
@@ -143,29 +153,14 @@
         '()
         pseudocodes))
 
-;;; static SCM PyLong_FromLongLong_wrapper(SCM value)
-;;; {
-;;;   if(!scm_integer_p(value)) {
-;;;     return raise_error("PyLong_FromLongLong", "Invalid value provided");
-;;;   } else {
-;;;     long long int_value = scm_to_signed_integer(value, LONG_MIN, LONG_MAX);
-;;;     PyObject *py_value;
-;;;     WITH_PYTHON_LOCK(py_value = PyLong_FromLongLong(int_value));
-;;; 
-;;;     struct PyObject_data *pyobject_data  = (struct PyObject_data *) scm_gc_malloc (sizeof (struct PyObject_data), "PyLong");
-;;;     pyobject_data->object = py_value;
-;;;     
-;;;     return scm_make_foreign_object_1(PyObject_type, pyobject_data);
-;;;   }
-;;; }
-;;;
-
 ;;; TODO/FIXME generalize for N arguments!
 (define (create-arguments-pseudocode-blocks function-name arguments)
   (if (nil? arguments)
       '()
-      `((:check-value ,(format #f "Argument ~d for ~a" 0 function-name) ,(function-argument-from-index 0) long)
-        (:convert-from-scheme scm_arg_0 call_arg_0 long))))
+      `((:check-value ,(format #f "Argument ~d for ~a" 0 function-name)
+                      ,(function-argument-from-index 0)
+                      ,(car arguments))
+        (:convert-from-scheme scm_arg_0 call_arg_0 ,(car arguments)))))
 
 (define (create-pseudocode specification)
   (let ((return-value (car specification))

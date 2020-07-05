@@ -17,4 +17,6 @@ char *get_optional_allocated_string(SCM optional_string, char *default_string);
 
 SCM create_empty_list();
 
+long convert_to_long(SCM value);
+
 #endif
