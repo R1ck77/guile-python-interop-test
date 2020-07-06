@@ -36,7 +36,7 @@
 
 (define (get-check-function-for-type type)
   (case type
-    ((long) "scm_integer_p")
+    ((longlong) "scm_integer_p")
     ((double) "scm_real_p")))
 
 (define (expand-check-value arguments)
@@ -50,15 +50,20 @@
 
 (define (get-convert-function-for-type type)
   (case type
-    ((long) "convert_to_long")
+    ((longlong) "convert_to_longlong")
     ((double) "scm_to_double")))
+
+(define (get-type-from-type-name type-name)
+  (case type-name
+    ((longlong) "long long")
+    ((double) "double")))
 
 (define (expand-convert-from-scheme arguments)
   (let ((input-name (car arguments))
         (result-name (cadr arguments))
         (type (list-ref arguments 2)))
     (list
-     (format #f "~a ~a = ~a(~a);\n\n" type result-name (get-convert-function-for-type type) input-name))))
+     (format #f "~a ~a = ~a(~a);\n\n" (get-type-from-type-name type) result-name (get-convert-function-for-type type) input-name))))
 
 (define (expand-return arguments)
   (list

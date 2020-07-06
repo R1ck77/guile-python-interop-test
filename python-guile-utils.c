@@ -41,8 +41,8 @@ SCM create_empty_list()
   return scm_list_n(SCM_UNDEFINED);
 }
 
-long convert_to_long(SCM value)
+long long convert_to_longlong(SCM value)
 {
-  return scm_to_signed_integer(value, LONG_MIN, LONG_MAX);
+  return scm_to_long_long(value);
 }
 
