@@ -19,4 +19,8 @@ SCM create_empty_list();
 
 long long convert_to_longlong(SCM value);
 
+SCM pyobject_type_p(SCM object);
+
+PyObject* convert_to_pyobject(SCM object);
+
 #endif

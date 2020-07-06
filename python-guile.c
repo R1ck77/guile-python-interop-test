@@ -7,21 +7,6 @@
 
 #include "automatically-generated.c"
 
-static SCM PyDict_Copy_wrapper(SCM scm_dict)
-{
-  scm_assert_foreign_object_type(PyObject_type, scm_dict);
-  struct PyObject_data *pyobject_data = scm_foreign_object_ref(scm_dict, 0);
-
-  PyObject *new_py_dict;
-  WITH_PYTHON_LOCK(new_py_dict = PyDict_Copy(pyobject_data->object));
-
-  if(new_py_dict == NULL) {
-    return create_empty_list();
-  } else {
-    return create_python_scm(new_py_dict, "PyDict");
-  }
-}
-
 static SCM PyLong_AsLongLong_wrapper(SCM value)
 {
   scm_assert_foreign_object_type(PyObject_type, value);

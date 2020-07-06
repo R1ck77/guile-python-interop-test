@@ -46,3 +46,19 @@ long long convert_to_longlong(SCM value)
   return scm_to_long_long(value);
 }
 
+SCM pyobject_type_p(SCM object)
+{
+  // TODO/FIXME this is not a predicate!!!! Also, leaks
+  // TODO/FIXME I need to a) catch the error (right now ignored)
+  // b) do something with it, possibly clearing it if the case
+  scm_assert_foreign_object_type(PyObject_type, object);
+  return SCM_BOOL_T;
+}
+
+PyObject* convert_to_pyobject(SCM object)
+{
+  struct PyObject_data *pyobject_data = scm_foreign_object_ref(object, 0);
+  return pyobject_data->object;
+}
+
+

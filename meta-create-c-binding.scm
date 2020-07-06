@@ -36,6 +36,7 @@
 
 (define (get-check-function-for-type type)
   (case type
+    ((PyObject*) "pyobject_type_p")
     ((longlong) "scm_integer_p")
     ((double) "scm_real_p")))
 
@@ -50,11 +51,13 @@
 
 (define (get-convert-function-for-type type)
   (case type
+    ((PyObject*) "convert_to_pyobject")
     ((longlong) "convert_to_longlong")
     ((double) "scm_to_double")))
 
 (define (get-type-from-type-name type-name)
   (case type-name
+    ((PyObject*) "PyObject*")
     ((longlong) "long long")
     ((double) "double")))
 
@@ -157,6 +160,22 @@
           (append previous (expand-pseudo-instruction pseudo-instruction)))
         '()
         pseudocodes))
+
+;;; static SCM PyDict_Copy_wrapper(SCM scm_dict)
+;;; {
+;;;   scm_assert_foreign_object_type(PyObject_type, scm_dict);
+;;;   struct PyObject_data *pyobject_data = scm_foreign_object_ref(scm_dict, 0);
+;;; 
+;;;   PyObject *new_py_dict;
+;;;   WITH_PYTHON_LOCK(new_py_dict = PyDict_Copy(pyobject_data->object));
+;;; 
+;;;   if(new_py_dict == NULL) {
+;;;     return create_empty_list();
+;;;   } else {
+;;;     return create_python_scm(new_py_dict, "PyDict");
+;;;   }
+;;; }
+;;; 
 
 ;;; TODO/FIXME generalize for N arguments!
 (define (create-arguments-pseudocode-blocks function-name arguments)
