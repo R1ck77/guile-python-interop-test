@@ -79,16 +79,15 @@
                  (generate-function-lines group-pseudocodes))
             '("}\n\n"))))
 
-(define (expand-to-py-object-conversion arguments)
+(define (expand-convert-to-scheme arguments)
   (let ((input-name (car arguments))
-        (result-name (cadr arguments)))
+        (result-name (cadr arguments))
+        (type (list-ref arguments 2)))
     (list
-     (format #f "SCM ~a;\n" result-name)
-     (format #f "if(~a == NULL) {\n" input-name)
-     (format #f "\t~a = create_empty_list();\n" result-name)
-     "} else {\n"
-     (format #f "\t~a = create_python_scm(~a, \"PyObject\");\n" result-name input-name)
-     "}\n\n")))
+     (case type
+       ((PyObject*) (format #f "SCM ~a = checked_pyobject_to_scheme(~a);\n" result-name input-name))
+       ((longlong) (format #f "SCM ~a = scm_from_long_long(~a);\n" result-name input-name))
+       ((double) (format #f "SCM ~a = scm_from_double(~a);\n" result-name input-name))))))
 
 (define (create-call-arguments-list arg-names)
   (string-join (map (lambda (name)
@@ -102,7 +101,7 @@
         (arguments-names (list-ref arguments 2))
         (return-variable (list-ref arguments 3)))
     (list
-     (format #f "~a ~a;\n" return-type return-variable)
+     (format #f "~a ~a;\n" (get-type-from-type-name return-type) return-variable)
      (format #f "WITH_PYTHON_LOCK(~a = ~a(~a));\n\n" return-variable function-name (create-call-arguments-list arguments-names)))))
 
 (define (expand-sub-execute arguments)
@@ -139,8 +138,8 @@
     expand-sub-execute)
    ((eqv? type ':function-execute)
     expand-function-execute)
-   ((eqv? type ':to-py-object)
-    expand-to-py-object-conversion)
+   ((eqv? type ':convert-to-scheme)
+    expand-convert-to-scheme)
    ((eqv? type ':return)
     expand-return)
    ((eqv? type ':group)
@@ -190,7 +189,7 @@
                 `((:sub-execute ,name ,call-arguments)
                   (:return SCM_UNSPECIFIED))
                 `((:function-execute ,return-value ,name ,call-arguments result) ;;; ADDED AN ARGUMENT
-                  (:to-py-object result scm_result)
+                  (:convert-to-scheme result scm_result ,return-value)
                   (:return scm_result)))))))))
 
 (define (translate-specification raw-specification)

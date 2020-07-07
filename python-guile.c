@@ -7,24 +7,6 @@
 
 #include "automatically-generated.c"
 
-static SCM PyLong_AsLongLong_wrapper(SCM value)
-{
-  scm_assert_foreign_object_type(PyObject_type, value);
-  struct PyObject_data *pyobject_data = scm_foreign_object_ref(value, 0);
-  long long int_value;
-  WITH_PYTHON_LOCK(int_value = PyLong_AsLongLong(pyobject_data->object))
-  return scm_from_signed_integer(int_value);
-}
-
-static SCM PyFloat_AsDouble_wrapper(SCM value)
-{
-  scm_assert_foreign_object_type(PyObject_type, value);
-  struct PyObject_data *pyobject_data = scm_foreign_object_ref(value, 0);
-  double double_value;
-  WITH_PYTHON_LOCK(double_value = PyFloat_AsDouble(pyobject_data->object))
-  return scm_from_double(double_value);
-}
-
 static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
 {
   int start = get_optional_int(scm_start, Py_file_input);

@@ -23,4 +23,6 @@ SCM pyobject_type_p(SCM object);
 
 PyObject* convert_to_pyobject(SCM object);
 
+SCM checked_pyobject_to_scheme(PyObject* pyObject);
+
 #endif

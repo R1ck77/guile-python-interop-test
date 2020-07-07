@@ -58,4 +58,11 @@ PyObject* convert_to_pyobject(SCM object)
   return pyobject_data->object;
 }
 
-
+SCM checked_pyobject_to_scheme(PyObject* pyObject)
+{
+  if(pyObject == NULL) {
+    return create_empty_list();
+  } else {
+    return create_python_scm(pyObject, "PyObject");
+  }
+}
