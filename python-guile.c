@@ -17,6 +17,7 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
 
   free(script);
+  free(file);
 
   if(py_object == NULL) {
     return create_empty_list();
