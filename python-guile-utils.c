@@ -49,11 +49,7 @@ long long convert_to_longlong(SCM value)
 SCM pyobject_type_p(SCM object)
 {
   // thin ice: this macro is defined in guile.h, but it's not in the infodoc…
-  if(!SCM_IS_A_P(object, PyObject_type)) {
-      return SCM_BOOL_F;
-    } else {
-    return SCM_BOOL_T;
-  }
+  return SCM_IS_A_P(object, PyObject_type)? SCM_BOOL_T : SCM_BOOL_F;
 }
 
 PyObject* convert_to_pyobject(SCM object)
