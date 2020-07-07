@@ -43,25 +43,6 @@ static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
   } 
 }
 
-static SCM PyEval_EvalCode_wrapper(SCM code, SCM globals, SCM locals)
-{
-  scm_assert_foreign_object_type(PyObject_type, code);
-  struct PyObject_data *pycode_data = scm_foreign_object_ref(code, 0);
-  scm_assert_foreign_object_type(PyObject_type, globals);
-  struct PyObject_data *pyglobals_data = scm_foreign_object_ref(globals, 0);
-  scm_assert_foreign_object_type(PyObject_type, locals);
-  struct PyObject_data *pylocals_data = scm_foreign_object_ref(locals, 0);
-  
-  PyObject *result;
-  WITH_PYTHON_LOCK(result = PyEval_EvalCode(pycode_data->object, pyglobals_data->object, pylocals_data->object));
-
-  if(result == NULL) {
-    return raise_error("PyEval_EvalCode", "NULL retuned");
-  } else {
-    return create_python_scm(result, "PyDict");
-  }
-}
-
 static SCM PyDict_SetItemString_wrapper(SCM dict, SCM key, SCM value)
 {
   scm_assert_foreign_object_type(PyObject_type, dict);

@@ -94,7 +94,7 @@
   (string-join (map (lambda (name)
                         (format #f "~a" name))
                     arg-names)
-               ","))
+               ", "))
 
 (define (expand-function-execute arguments)
   (let ((return-type (car arguments))
@@ -118,7 +118,7 @@
   (string-join (map (lambda (index)
                       (format #f "SCM ~a" (function-argument-from-index index)))
                     (iota n-arguments))
-               ","))
+               ", "))
 
 (define (expand-header arguments)
   (let ((wrapper-name (cadr arguments))
@@ -161,30 +161,19 @@
         '()
         pseudocodes))
 
-;;; static SCM PyDict_Copy_wrapper(SCM scm_dict)
-;;; {
-;;;   scm_assert_foreign_object_type(PyObject_type, scm_dict);
-;;;   struct PyObject_data *pyobject_data = scm_foreign_object_ref(scm_dict, 0);
-;;; 
-;;;   PyObject *new_py_dict;
-;;;   WITH_PYTHON_LOCK(new_py_dict = PyDict_Copy(pyobject_data->object));
-;;; 
-;;;   if(new_py_dict == NULL) {
-;;;     return create_empty_list();
-;;;   } else {
-;;;     return create_python_scm(new_py_dict, "PyDict");
-;;;   }
-;;; }
-;;; 
+(define (froobzo index function-name type)
+  (let ((function-arg (function-argument-from-index index))
+        (call-arg (call-argument-from-index index)))
+   `((:check-value ,(format #f "Argument ~d for ~a" index function-name)
+                   ,function-arg
+                   ,type)
+     (:convert-from-scheme ,function-arg ,call-arg ,type))))
 
-;;; TODO/FIXME generalize for N arguments!
 (define (create-arguments-pseudocode-blocks function-name arguments)
-  (if (nil? arguments)
-      '()
-      `((:check-value ,(format #f "Argument ~d for ~a" 0 function-name)
-                      ,(function-argument-from-index 0)
-                      ,(car arguments))
-        (:convert-from-scheme scm_arg_0 call_arg_0 ,(car arguments)))))
+  (fold append '()  (map (lambda (index type)
+                          (froobzo index function-name type))
+                        (iota (length arguments))
+                        arguments)))
 
 (define (create-pseudocode specification)
   (let ((return-value (car specification))
