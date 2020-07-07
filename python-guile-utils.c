@@ -48,11 +48,12 @@ long long convert_to_longlong(SCM value)
 
 SCM pyobject_type_p(SCM object)
 {
-  // TODO/FIXME this is not a predicate!!!! Also, leaks
-  // TODO/FIXME I need to a) catch the error (right now ignored)
-  // b) do something with it, possibly clearing it if the case
-  scm_assert_foreign_object_type(PyObject_type, object);
-  return SCM_BOOL_T;
+  // thin ice: this macro is defined in guile.h, but it's not in the infodoc…
+  if(!SCM_IS_A_P(object, PyObject_type)) {
+      return SCM_BOOL_F;
+    } else {
+    return SCM_BOOL_T;
+  }
 }
 
 PyObject* convert_to_pyobject(SCM object)
