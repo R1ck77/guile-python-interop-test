@@ -62,13 +62,6 @@ static SCM PyEval_EvalCode_wrapper(SCM code, SCM globals, SCM locals)
   }
 }
 
-static SCM PyEval_GetBuiltins_wrapper()
-{
-  PyObject *result;
-  WITH_PYTHON_LOCK(result = PyEval_GetBuiltins());
-  return create_python_scm(result, "PyDict");  
-}
-
 static SCM PyDict_SetItemString_wrapper(SCM dict, SCM key, SCM value)
 {
   scm_assert_foreign_object_type(PyObject_type, dict);
