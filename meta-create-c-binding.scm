@@ -2,6 +2,8 @@
 (use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 
+(define comma-separator ", ")
+
 (define functions-file (car (cdr (command-line))))
 
 (define (read-lines port lines)
@@ -93,7 +95,7 @@
   (string-join (map (lambda (name)
                         (format #f "~a" name))
                     arg-names)
-               ", "))
+               comma-separator))
 
 (define (expand-function-execute arguments)
   (let ((return-type (car arguments))
@@ -117,7 +119,7 @@
   (string-join (map (lambda (index)
                       (format #f "SCM ~a" (function-argument-from-index index)))
                     (iota n-arguments))
-               ", "))
+               comma-separator))
 
 (define (expand-header arguments)
   (let ((wrapper-name (cadr arguments))
