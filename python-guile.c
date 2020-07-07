@@ -7,43 +7,6 @@
 
 #include "automatically-generated.c"
 
-static SCM Py_CompileString_wrapper(SCM scm_script, SCM scm_file, SCM scm_start)
-{
-  int start = get_optional_int(scm_start, Py_file_input);
-  char *file = get_optional_allocated_string(scm_file, "<file>");
-  char *script = scm_to_utf8_stringn(scm_script, NULL);
-
-  PyObject *py_object;
-  WITH_PYTHON_LOCK(py_object = Py_CompileString(script, file, start));
-
-  free(script);
-  free(file);
-
-  if(py_object == NULL) {
-    return create_empty_list();
-  } else {
-    return create_python_scm(py_object, "PyCompiledCode");
-  } 
-}
-
-static SCM PyDict_SetItemString_wrapper(SCM dict, SCM key, SCM value)
-{
-  scm_assert_foreign_object_type(PyObject_type, dict);
-  struct PyObject_data *pydict_data = scm_foreign_object_ref(dict, 0);
-  
-  char *c_key = scm_to_utf8_stringn(key, NULL);
-
-  scm_assert_foreign_object_type(PyObject_type, value);
-  struct PyObject_data *pyvalue_data = scm_foreign_object_ref(value, 0);
-
-  int result;
-  WITH_PYTHON_LOCK(result = PyDict_SetItemString(pydict_data->object, c_key, pyvalue_data->object));
-
-  free(c_key);
-
-  return scm_from_signed_integer(result);
-}
-
 void export_constants()
 {
   scm_c_define("py-file-input", scm_from_signed_integer(Py_file_input));

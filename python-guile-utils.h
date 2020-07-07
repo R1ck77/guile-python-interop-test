@@ -11,13 +11,13 @@ SCM raise_error(const char *subroutine, const char *message);
 
 SCM create_python_scm(PyObject *py_object, const char *object_name);
 
-int get_optional_int(SCM optional_int, int default_value);
-
-char *get_optional_allocated_string(SCM optional_string, char *default_string);
+char* convert_to_allocated_string(SCM value);
 
 SCM create_empty_list();
 
 long long convert_to_longlong(SCM value);
+
+int convert_to_int(SCM value);
 
 SCM pyobject_type_p(SCM object);
 

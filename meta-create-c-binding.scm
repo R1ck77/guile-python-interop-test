@@ -38,6 +38,8 @@
 
 (define (get-check-function-for-type type)
   (case type
+    ((int) "scm_exact_integer_p")
+    ((char*) "scm_string_p")
     ((PyObject*) "pyobject_type_p")
     ((longlong) "scm_integer_p")
     ((double) "scm_real_p")))
@@ -53,12 +55,16 @@
 
 (define (get-convert-function-for-type type)
   (case type
+    ((int) "convert_to_int")
+    ((char*) "convert_to_allocated_string") ; TODO/FIXME memory leak!!!
     ((PyObject*) "convert_to_pyobject")
     ((longlong) "convert_to_longlong")
     ((double) "scm_to_double")))
 
 (define (get-type-from-type-name type-name)
   (case type-name
+    ((int) "int")
+    ((char*) "char*")
     ((PyObject*) "PyObject*")
     ((longlong) "long long")
     ((double) "double")))
@@ -87,6 +93,8 @@
         (type (list-ref arguments 2)))
     (list
      (case type
+       ((int) (format #f "SCM ~a = scm_from_int(~a);\n" result-name input-name))
+       ((char*) (error "not implemented!")) ; TODO/FIXME
        ((PyObject*) (format #f "SCM ~a = checked_pyobject_to_scheme(~a);\n" result-name input-name))
        ((longlong) (format #f "SCM ~a = scm_from_long_long(~a);\n" result-name input-name))
        ((double) (format #f "SCM ~a = scm_from_double(~a);\n" result-name input-name))))))
@@ -213,5 +221,3 @@
 
 (write-lines header)
 (write-wrappers functions-file)
-
-

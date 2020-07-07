@@ -25,16 +25,6 @@ SCM create_python_scm(PyObject *py_object, const char *object_name)
   return scm_make_foreign_object_1(PyObject_type, pyobject_data);  
 }
 
-int get_optional_int(SCM optional_int, int default_value)
-{
-  return scm_is_eq(optional_int, SCM_UNDEFINED) ? default_value : scm_to_signed_integer(optional_int, LONG_MIN, LONG_MAX);
-}
-
-char *get_optional_allocated_string(SCM optional_string, char *default_string)
-{
-  return scm_is_eq(optional_string, SCM_UNDEFINED) ? strdup(default_string) : scm_to_utf8_stringn(optional_string, NULL);
-}
-
 // TODO/FIXME this seems oddly convoluted
 SCM create_empty_list()
 {
@@ -44,6 +34,16 @@ SCM create_empty_list()
 long long convert_to_longlong(SCM value)
 {
   return scm_to_long_long(value);
+}
+
+int convert_to_int(SCM value)
+{
+  return scm_to_int(value);
+}
+
+char* convert_to_allocated_string(SCM value)
+{
+  return scm_to_utf8_stringn(value, NULL);
 }
 
 SCM pyobject_type_p(SCM object)
