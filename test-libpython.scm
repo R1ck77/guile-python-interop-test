@@ -46,11 +46,23 @@
     (let ((result (pyeval-eval-code compiled-code globals globals)))
       (format #t "Got a result: ~a…\n" result))))
 
+(define (tuples-test n)
+  (let ((tuple (pytuple-new n)))
+    (map (lambda (i)
+           (pytuple-set-item tuple i (pylong-from-long i)))
+         (iota n))
+    (map (lambda (i)
+           (let ((actual (pylong-as-long (pytuple-get-item tuple i))))
+             (if (not (eqv? actual i))
+                 (error (format #f "Invalid value (~d) for index ~d" actual i)))))
+     (iota n))))
+
 (long-conversion-test 42)
 (double-conversion-test 3.1415)
 (dict-creation-test)
 (execution-test)
 (finalization-test 10)
+(tuples-test 10)
 
 ;;; Finalize Python
 (py-finalize)
