@@ -35,6 +35,11 @@ void export_functions()
   scm_c_define_gsubr("pydict-copy", 1, 0, 0, PyDict_Copy_wrapper);
   scm_c_define_gsubr("pydict-set-item-string", 3, 0, 0, PyDict_SetItemString_wrapper);
   scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
+
+  scm_c_define_gsubr("py-incref", 1, 0, 0, Py_INCREF_wrapper);
+  scm_c_define_gsubr("pytuple-new", 1, 0, 0, PyTuple_New_wrapper);
+  scm_c_define_gsubr("pytuple-set-item", 3, 0, 0, PyTuple_SetItem_wrapper);
+  scm_c_define_gsubr("pytuple-get-item", 2, 0, 0, PyTuple_GetItem_wrapper);
 }
                       
 

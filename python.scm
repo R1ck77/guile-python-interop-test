@@ -10,6 +10,10 @@
             py-compile-string
             pyeval-eval-code
             pyeval-get-builtins
+            pytuple-new
+            pytuple-set-item
+            pytuple-get-item
+            py-incref
             py-finalize
             py-file-input
             py-eval-input
