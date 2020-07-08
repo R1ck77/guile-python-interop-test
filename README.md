@@ -43,5 +43,5 @@ It would be great to being able to push the code generation to a point where all
 
 Many, here is a semi-updated list of the ones I know:
 
-- automatic code generation supports a somewhat limited combination of arguments/return values
+- automatic code generation doesn't support all combinations of function argumentsand all return types
 - the template doesn't generate all code: the list of published symbols in `python.scm` module needs to be updated manually
