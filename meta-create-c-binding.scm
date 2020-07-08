@@ -12,8 +12,8 @@
         lines
         (read-lines port (cons line lines)))))
 
-(define (read-specifications path)
-  (format #t "//Reading the functions definitions from: ~a\n\n" path)
+(define (read-specifications path port)
+  (format port "//Reading the functions definitions from: ~a\n\n" path)
   (let* ((port (open-input-file path))
          (results (read-lines port '())))
     (close-port port)
@@ -27,9 +27,11 @@
    " */\n"
    "\n"))
 
-(define (write-lines lines)
-  (map display
-       lines))
+(define (write-lines lines . rest)
+  (let ((port (if (null? rest) #t (car rest))))
+   (map (lambda (line)
+          (format port "~a" line))
+        lines)))
 
 (define generate-function-lines)
 
@@ -231,11 +233,12 @@
        (,(car functions) ,input))))
 
 (define (write-wrappers path-to-templates)
-  (write-lines header)
-  (map write-lines
-       (map generate-function-lines
-            (map create-pseudocode
-                 (map translate-specification
-                      (read-specifications path-to-templates))))))
+  (let ((port (open-output-file "automatically-generated.c")))
+    (write-lines header port)
+    (map (lambda (lines) (write-lines lines port))
+         (map generate-function-lines
+              (map create-pseudocode
+                   (map translate-specification
+                        (read-specifications path-to-templates port)))))))
 
 (write-wrappers functions-file)

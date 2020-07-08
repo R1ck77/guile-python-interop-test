@@ -21,7 +21,7 @@ python-guile.so: $(STATIC_SOURCES) $(GENERATED_SOURCES)
 	gcc -fPIC -shared $(CFLAGS) -o $@ $(STATIC_SOURCES) $(LDFLAGS) -lpthread
 
 automatically-generated.c: template.scm meta-create-c-binding.scm
-	guile meta-create-c-binding.scm $< >$@
+	guile meta-create-c-binding.scm $<
 
 clean:
 	rm -f *.o *.so $(GENERATED_SOURCES)
