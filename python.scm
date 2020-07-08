@@ -1,24 +1,11 @@
 (define-module (python)
-  #:export (py-initialize
-            pylong-from-long-long
-            pylong-as-long-long
-            pyfloat-from-double
-            pyfloat-as-double
-            pydict-new
-            pydict-copy
-            pydict-set-item-string
-            py-compile-string
-            pyeval-eval-code
-            pyeval-get-builtins
-            pytuple-new
-            pytuple-set-item
-            pytuple-get-item
-            py-incref
-            py-finalize
+  #:export (
             py-file-input
             py-eval-input
             py-single-input))
-            
+
+(include "auto-exported.txt") 
+
 (load-extension "python-guile" "init_python")
 
 

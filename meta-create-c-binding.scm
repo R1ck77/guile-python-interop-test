@@ -13,7 +13,6 @@
         (read-lines port (cons line lines)))))
 
 (define (read-specifications path port)
-  (format port "//Reading the functions definitions from: ~a\n" path)
   (let* ((port (open-input-file path))
          (results (read-lines port '())))
     (close-port port)
@@ -290,5 +289,22 @@
     (write-gsubr-definitions-to-port path-to-templates port)
     (close-port port)))
 
+(define (specification-to-scheme-function specification)
+  (format #f "(export ~a)\n" (python-c-name-to-scheme-name
+                     (symbol->string
+                      (cadr specification)))))
+
+(define (write-exported-definitions-to-port path-to-templates port)
+  (let ((lines (map specification-to-scheme-function
+                    (map translate-specification
+                         (read-specifications path-to-templates port)))))    
+    (write-lines lines port)))
+
+(define (write-exported-definitions path-to-templates)
+  (let ((port (open-output-file "auto-exported.txt")))
+    (write-exported-definitions-to-port path-to-templates port)
+    (close-port port)))
+
 (write-functions-wrappers functions-file)
 (write-gsubr-definitions functions-file)
+(write-exported-definitions functions-file)

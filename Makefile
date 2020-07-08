@@ -9,7 +9,7 @@ LDFLAGS=`pkg-config --libs python3 guile-2.2`
 endif
 
 STATIC_SOURCES=python-guile.c python-guile-utils.c pyobject-data.c python-locking.c
-GENERATED_SOURCES=auto-wrappers.c auto-define-gsubr.c
+GENERATED_SOURCES=auto-wrappers.c auto-define-gsubr.c auto-exported.txt
 ALL_SOURCES=$(STATIC_SOURCES) $(GENERATED_SOURCES)
 
 run: all
