@@ -5,7 +5,7 @@
 #include <string.h>
 #include "python-guile-utils.h"
 
-#include "automatically-generated.c"
+#include "auto-wrappers.c"
 
 void export_constants()
 {
@@ -23,23 +23,7 @@ void export_types()
 
 void export_functions()
 {
-  scm_c_define_gsubr("py-initialize", 0, 0, 0, Py_Initialize_wrapper);
-  scm_c_define_gsubr("pylong-from-long", 1, 0, 0, PyLong_FromLongLong_wrapper);
-  scm_c_define_gsubr("pylong-as-long", 1, 0, 0, PyLong_AsLongLong_wrapper);
-  scm_c_define_gsubr("pyfloat-from-double", 1, 0, 0, PyFloat_FromDouble_wrapper);
-  scm_c_define_gsubr("pyfloat-as-double", 1, 0, 0, PyFloat_AsDouble_wrapper);
-  scm_c_define_gsubr("py-compile-string", 1, 2, 0, Py_CompileString_wrapper);
-  scm_c_define_gsubr("pyeval-eval-code", 3, 0, 0, PyEval_EvalCode_wrapper);
-  scm_c_define_gsubr("pyeval-get-builtins", 0, 0, 0, PyEval_GetBuiltins_wrapper);  
-  scm_c_define_gsubr("pydict-new", 0, 0, 0, PyDict_New_wrapper);
-  scm_c_define_gsubr("pydict-copy", 1, 0, 0, PyDict_Copy_wrapper);
-  scm_c_define_gsubr("pydict-set-item-string", 3, 0, 0, PyDict_SetItemString_wrapper);
-  scm_c_define_gsubr("py-finalize", 0, 0, 0, Py_Finalize_wrapper);
-
-  scm_c_define_gsubr("py-incref", 1, 0, 0, Py_INCREF_wrapper);
-  scm_c_define_gsubr("pytuple-new", 1, 0, 0, PyTuple_New_wrapper);
-  scm_c_define_gsubr("pytuple-set-item", 3, 0, 0, PyTuple_SetItem_wrapper);
-  scm_c_define_gsubr("pytuple-get-item", 2, 0, 0, PyTuple_GetItem_wrapper);
+#include "auto-define-gsubr.c"
 }
                       
 

@@ -18,7 +18,7 @@
                          value result))))))
 
 (define (long-conversion-test value)
-  (conversion-test value "d" pylong-from-long pylong-as-long))
+  (conversion-test value "d" pylong-from-long-long pylong-as-long-long))
 
 (define (double-conversion-test value)
   (conversion-test value "f" pyfloat-from-double pyfloat-as-double))
@@ -28,7 +28,7 @@
       ((> i repetitions))
       (let ((value (+ i 100000)))
        (format #t "Creating a Python integer with ~d…\n" value)
-       (pylong-from-long value)))
+       (pylong-from-long-long value)))
   (display "Forcing garbage collection…\n")
   (gc))
 
@@ -49,12 +49,12 @@
 (define (tuples-test n)
   (let ((tuple (pytuple-new n)))
     (map (lambda (i)
-           (let ((pylong (pylong-from-long i)))
+           (let ((pylong (pylong-from-long-long i)))
              (py-incref pylong)
              (pytuple-set-item tuple i pylong)))
          (iota n))
     (map (lambda (i)
-           (let ((actual (pylong-as-long (pytuple-get-item tuple i))))
+           (let ((actual (pylong-as-long-long (pytuple-get-item tuple i))))
              (if (not (eqv? actual i))
                  (error (format #f "Invalid value (~d) for index ~d" actual i)))))
      (iota n))))

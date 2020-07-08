@@ -13,7 +13,7 @@
         (read-lines port (cons line lines)))))
 
 (define (read-specifications path port)
-  (format port "//Reading the functions definitions from: ~a\n\n" path)
+  (format port "//Reading the functions definitions from: ~a\n" path)
   (let* ((port (open-input-file path))
          (results (read-lines port '())))
     (close-port port)
@@ -201,6 +201,9 @@
                       (eq? 'char* (cdr pair)))
                     (map cons args-range args)))))
 
+(define (python-c-name-to-c-wrapper-name python-name)
+  (format #f "~a_wrapper" python-name))
+
 (define (create-pseudocode specification)
   (let ((return-value (car specification))
         (name (list-ref specification 1))
@@ -210,7 +213,7 @@
            (call-arguments (map call-argument-from-index args-range))
            (free-operations (create-free-operations args-range args)))
       `((:comment ,(format #f "// ~a\n" name))
-        (:header ,return-value ,(format #f "~a_wrapper" name) ,(length args))
+        (:header ,return-value ,(python-c-name-to-c-wrapper-name name) ,(length args))
         (:group
          (,@(create-arguments-pseudocode-blocks name args)
           ,@(if (eq? return-value 'void)
@@ -241,8 +244,51 @@
                         (read-specifications path-to-templates port))))))
 
 (define (write-functions-wrappers path-to-templates)
-  (let ((port (open-output-file "automatically-generated.c")))
+  (let ((port (open-output-file "auto-wrappers.c")))
     (write-functions-wrappers-to-port path-to-templates port)
     (close-port port)))
 
+(define (camel-to-kebab name)
+  (apply string (reverse (fold append '()
+                       (map (lambda (char)
+                              (if (char-upper-case? char)
+                                  (list (char-downcase char) #\-)
+                                  (list char)))
+                            (string->list name))))))
+
+(define (string-all-upcase? string)
+  (eqv? 0 (length (filter char-lower-case? (string->list string)))))
+
+(define (python-c-name-to-scheme-name c-name)
+  (let* ((tokens (string-split c-name #\_))
+         (head (string-downcase (car tokens)))
+         (raw-tail (cadr tokens))
+         (tail (if (string-all-upcase? raw-tail)
+                   (string-append "-" (string-downcase raw-tail))
+                   (camel-to-kebab raw-tail))))
+    (string-append head tail)))
+
+(define (specification-to-gsubr specification)
+  (let ((python-c-name (symbol->string (list-ref specification 1)))
+        (arguments (list-ref specification 2)))
+    (let ((scheme-name (python-c-name-to-scheme-name python-c-name))
+          (wrapper-name (python-c-name-to-c-wrapper-name python-c-name))
+          (n-args (length arguments)))
+      (format #f "scm_c_define_gsubr(\"~a\", ~d, 0, 0, ~a);\n"
+              scheme-name n-args wrapper-name))))
+
+;; TODO/FIXME factorize the line reading
+(define (write-gsubr-definitions-to-port path-to-templates port)
+  (let ((lines (map specification-to-gsubr
+                    (map translate-specification
+                         (read-specifications path-to-templates port)))))    
+    (write-lines lines port)))
+
+;; TODO/FIXME duplicated code
+(define (write-gsubr-definitions path-to-templates)
+  (let ((port (open-output-file "auto-define-gsubr.c")))
+    (write-gsubr-definitions-to-port path-to-templates port)
+    (close-port port)))
+
 (write-functions-wrappers functions-file)
+(write-gsubr-definitions functions-file)

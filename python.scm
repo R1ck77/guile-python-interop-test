@@ -1,7 +1,7 @@
 (define-module (python)
   #:export (py-initialize
-            pylong-from-long
-            pylong-as-long
+            pylong-from-long-long
+            pylong-as-long-long
             pyfloat-from-double
             pyfloat-as-double
             pydict-new

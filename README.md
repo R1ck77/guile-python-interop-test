@@ -44,4 +44,4 @@ It would be great to being able to push the code generation to a point where all
 Many, here is a semi-updated list of the ones I know:
 
 - automatic code generation supports a somewhat limited combination of arguments/return values
-- the template doesn't generate all code: the `scm_c_define_gsubr` is not yet created  and the list of published symbols in `python.scm` module needs to be updated by hand
+- the template doesn't generate all code: the list of published symbols in `python.scm` module needs to be updated manually
