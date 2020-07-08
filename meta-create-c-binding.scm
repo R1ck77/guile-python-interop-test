@@ -56,7 +56,7 @@
 (define (get-convert-function-for-type type)
   (case type
     ((int) "convert_to_int")
-    ((char*) "convert_to_allocated_string") ; TODO/FIXME memory leak!!!
+    ((char*) "convert_to_allocated_string")
     ((PyObject*) "convert_to_pyobject")
     ((longlong) "convert_to_longlong")
     ((double) "scm_to_double")))
@@ -138,7 +138,12 @@
 (define (expand-comment arguments)
   arguments)
 
-(define (get-expansion-function type)
+(define (expand-free arguments)
+  (let ((var-name (car arguments)))
+    (list
+     (format #f "free(~a);\n" var-name))))
+
+(define (get-expansion-function type) ;; TODO/FIXME convert to a case!
   (cond
    ((eqv? type ':comment)
     expand-comment)
@@ -157,7 +162,9 @@
    ((eqv? type ':check-value)
     expand-check-value )
    ((eqv? type ':convert-from-scheme)
-    expand-convert-from-scheme)))
+    expand-convert-from-scheme)
+   ((eqv? type ':free)
+    expand-free)))
 
 (define (expand-pseudo-instruction pseudocode)
   (let ((type (car pseudocode))
@@ -184,22 +191,32 @@
                         (iota (length arguments))
                         arguments)))
 
-;;; TODO/FIXME needs to account for strings finalization!
+(define (create-free-operations args-range args)
+  (map (lambda (index)
+         `(:free ,(call-argument-from-index index)))
+       (map car
+            (filter (lambda (pair)
+                      (eq? 'char* (cdr pair)))
+                    (map cons args-range args)))))
+
 (define (create-pseudocode specification)
   (let ((return-value (car specification))
         (name (list-ref specification 1))
         (args (list-ref specification 2)))
     (let* ((args-range (iota (length args)))
            (function-arguments (map function-argument-from-index args-range))
-           (call-arguments (map call-argument-from-index args-range))) 
+           (call-arguments (map call-argument-from-index args-range))
+           (free-operations (create-free-operations args-range args)))
       `((:comment ,(format #f "// ~a\n" name))
         (:header ,return-value ,(format #f "~a_wrapper" name) ,(length args))
         (:group
          (,@(create-arguments-pseudocode-blocks name args)
           ,@(if (eq? return-value 'void)
                 `((:sub-execute ,name ,call-arguments)
+                  ,@free-operations
                   (:return SCM_UNSPECIFIED))
                 `((:function-execute ,return-value ,name ,call-arguments result) ;;; ADDED AN ARGUMENT
+                  ,@free-operations
                   (:convert-to-scheme result scm_result ,return-value)
                   (:return scm_result)))))))))
 

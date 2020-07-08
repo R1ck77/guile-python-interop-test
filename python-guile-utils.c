@@ -43,7 +43,7 @@ int convert_to_int(SCM value)
 
 char* convert_to_allocated_string(SCM value)
 {
-  return scm_to_utf8_stringn(value, NULL);
+  return scm_to_utf8_stringn(value, NULL); // TODO/FIXME account for strings with embedded zeroes?
 }
 
 SCM pyobject_type_p(SCM object)
