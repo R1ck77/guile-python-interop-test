@@ -232,13 +232,17 @@
     `(let ((,input ,value))
        (,(car functions) ,input))))
 
-(define (write-wrappers path-to-templates)
-  (let ((port (open-output-file "automatically-generated.c")))
-    (write-lines header port)
+(define (write-functions-wrappers-to-port path-to-templates port)
+  (write-lines header port)
     (map (lambda (lines) (write-lines lines port))
          (map generate-function-lines
               (map create-pseudocode
                    (map translate-specification
-                        (read-specifications path-to-templates port)))))))
+                        (read-specifications path-to-templates port))))))
 
-(write-wrappers functions-file)
+(define (write-functions-wrappers path-to-templates)
+  (let ((port (open-output-file "automatically-generated.c")))
+    (write-functions-wrappers-to-port path-to-templates port)
+    (close-port port)))
+
+(write-functions-wrappers functions-file)
