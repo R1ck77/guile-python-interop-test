@@ -231,11 +231,11 @@
        (,(car functions) ,input))))
 
 (define (write-wrappers path-to-templates)
+  (write-lines header)
   (map write-lines
        (map generate-function-lines
             (map create-pseudocode
                  (map translate-specification
                       (read-specifications path-to-templates))))))
 
-(write-lines header)
 (write-wrappers functions-file)
