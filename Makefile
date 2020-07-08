@@ -1,8 +1,12 @@
 .PHONY: clean all run
 
-
 CFLAGS=`pkg-config --cflags python3 guile-2.2`
+PYTHON_EMBED_PRESENT=$(shell pkg-config --exists python3-embed;echo $$?)
+ifeq ($(PYTHON_EMBED_PRESENT), 0)
+LDFLAGS=`pkg-config --libs python3-embed guile-2.2`
+else
 LDFLAGS=`pkg-config --libs python3 guile-2.2`
+endif
 
 STATIC_SOURCES=python-guile.c python-guile-utils.c pyobject-data.c python-locking.c
 GENERATED_SOURCES=automatically-generated.c
