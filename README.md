@@ -11,17 +11,26 @@ In order to better understand what the language is capable of and spot critical 
 There is a `python` module which, when loaded, provides the following functions:
     
     py-initialize
-    pylong-from-long
-    pylong-as-long
+    py-finalize
+    pylong-from-long-long
     pyfloat-from-double
+    pyeval-get-builtins
+    pyeval-eval-code
     pyfloat-as-double
+    pylong-as-long-long
+    py-compile-string
     pydict-new
     pydict-copy
     pydict-set-item-string
-    py-compile-string
-    pyeval-eval-code
-    pyeval-get-builtins
-    py-finalize
+    pydict-get-item-string
+    pydict-get-item
+    pydict-del-item
+    pydict-del-item-string
+    pydict-clear
+    pytuple-new
+    pytuple-get-item
+    pytuple-set-item
+    py-incref
 
 and the following constants:
 
@@ -35,14 +44,9 @@ All C code required for the Guile C wrapping around the Python is automatically 
 
 I know: SWIG can do this already, but it's still kinda cool because scheme bootstraps itself (anyway this is my opinion on the matter :) ).
 
-## Desiderata
-
-It would be great to being able to push the code generation to a point where all Python C/API functions can be added by just expanding the template.
-
 ## Bugs
 
 Many, here is a semi-updated list of the ones I know:
 
-- automatic code generation doesn't support all combinations of function argumentsand all return types
-- functions generated have the same reference counting mechanics of the original Python C/API code (obviously) so more work is needed to make it safely usable
-- template.scm is not a valid scheme file but it should be, though
+- automatic code generation doesn't support all combinations of function argumentsand all return types (it can't at the moment generate some PyErr functions for instance)
+- functions generated have the same reference counting mechanics of the original Python C/API code (obviously): this is not really a bug, but still more work is required to make the calls really usable
