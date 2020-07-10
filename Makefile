@@ -1,4 +1,4 @@
-.PHONY: clean all run
+.PHONY: clean all run test
 
 CFLAGS=`pkg-config --cflags python3 guile-2.2`
 PYTHON_EMBED_PRESENT=$(shell pkg-config --exists python3-embed;echo $$?)
@@ -13,6 +13,9 @@ GENERATED_SOURCES=auto-wrappers.c auto-define-gsubr.c auto-exported.txt
 ALL_SOURCES=$(STATIC_SOURCES) $(GENERATED_SOURCES)
 
 run: all
+	GUILE_LOAD_PATH=$GUILE_LOAD_PATH:. LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. guile python-demo.scm
+
+test: all
 	GUILE_LOAD_PATH=$GUILE_LOAD_PATH:. LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. guile test-libpython.scm
 
 all: python-guile.so
