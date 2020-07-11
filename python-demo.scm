@@ -1,4 +1,11 @@
 (define-module (python-demo))
 (use-modules (high-level))
+(use-modules (python))
 
-(display "Hello, World!\n")
+(py-initialize)
+
+(define locals (get-builtins-copy))
+(run-code "print(\"Hello, World!\")" locals locals)
+
+
+(py-finalize)
