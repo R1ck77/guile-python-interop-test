@@ -96,3 +96,15 @@ There is little to no testing for most of the code, mostly due to the fact it's 
 The code generation module `meta-create-c-binding.scm` has an hideous name and doesn't support all possible combination of arguments, most notably it doesn't support Python objects handlers required to support most `PyErr_` functions.
 
 More a feature than a bug, the Python/Guile interface is based on the low-level version of the Python API functions. This means it has the same reference counting quirks, and plays very poorly with GC without proper high level wrapping (see `high-level.scm`)
+
+## License
+
+This code is distributed under the GNU General Public License v2.
+
+This code can be freely used in non profit software, as long as proper credit is provided.
+
+Commercial use of the code is reserved.
+
+No matter how the code is used, no warranty whatsoever is provided.
+
+
