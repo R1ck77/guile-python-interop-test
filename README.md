@@ -99,12 +99,12 @@ More a feature than a bug, the Python/Guile interface is based on the low-level 
 
 ## License
 
-This code is distributed under the GNU General Public License v2.
+This software is distributed under the GNU General Public License v2.
 
-This code can be freely used in non profit software, as long as proper credit is provided.
+The code can be used in any non-profit software, with attribution.
 
-Commercial use of the code is reserved.
+Commercial use is reserved.
 
-No matter how the code is used, no warranty whatsoever is provided.
+Regardless of the usage, no warranty whatsoever is provided.
 
 
